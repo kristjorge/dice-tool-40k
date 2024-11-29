@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ProgramErrors.fs" />
+    <Compile Include="Domain.fs" />
+    <Compile Include="Rolls.fs" />
+    <Compile Include="Resolve.fs" />
+    <Compile Include="Contract.fs" />
+    <Compile Include="Config.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="FsToolkit.ErrorHandling" Version="4.18.0" />
+  </ItemGroup>
+</Project>

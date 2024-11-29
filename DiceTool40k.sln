@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "DiceTool40k.Core", "DiceTool40k.Core\DiceTool40k.Core.fsproj", "{50B28E3B-4913-4E8F-87CB-A45E7595BA14}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "DiceTool40k.Web", "DiceTool40k.Web\DiceTool40k.Web.fsproj", "{B28E1F37-8839-40A0-A3F5-EFA5FB96D622}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "DiceTool40k.Cli", "DiceTool40k.Cli\DiceTool40k.Cli.fsproj", "{B0D1561D-641B-44A9-AD55-49EF29FAD363}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{50B28E3B-4913-4E8F-87CB-A45E7595BA14}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{50B28E3B-4913-4E8F-87CB-A45E7595BA14}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{50B28E3B-4913-4E8F-87CB-A45E7595BA14}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{50B28E3B-4913-4E8F-87CB-A45E7595BA14}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B28E1F37-8839-40A0-A3F5-EFA5FB96D622}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B28E1F37-8839-40A0-A3F5-EFA5FB96D622}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B28E1F37-8839-40A0-A3F5-EFA5FB96D622}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B28E1F37-8839-40A0-A3F5-EFA5FB96D622}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B0D1561D-641B-44A9-AD55-49EF29FAD363}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B0D1561D-641B-44A9-AD55-49EF29FAD363}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B0D1561D-641B-44A9-AD55-49EF29FAD363}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B0D1561D-641B-44A9-AD55-49EF29FAD363}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
