@@ -1,40 +1,42 @@
-module DiceTool40K.Resolve
+namespace DiceTool40K.Core
 
-open DiceTool40K.Domain
-open DiceTool40K.Rolls
+open DiceTool40K.Core.Domain
+open DiceTool40K.Core.Rolls
 
-let numOfSimulations = 50000
+module Resolve =
 
-let removeModels (woundsPerModel: Wounds) (damages: Damage list) =
+    let numOfSimulations = 50000
 
-    let rec looper (removedModels: RemovedModels) (remainingDamages: Damage list) (remainingWounds: Wounds) =
-        match remainingDamages with
-        | [] -> removedModels
-        | dmg :: restOfDamage ->
-            let remainingWounds = Wounds.removeWounds remainingWounds dmg
+    let removeModels (woundsPerModel: Wounds) (damages: Damage list) =
 
-            if (Wounds.toInt remainingWounds) = 0 then
-                looper (RemovedModels.removeModel removedModels) restOfDamage woundsPerModel
-            else
-                looper removedModels restOfDamage remainingWounds
+        let rec looper (removedModels: RemovedModels) (remainingDamages: Damage list) (remainingWounds: Wounds) =
+            match remainingDamages with
+            | [] -> removedModels
+            | dmg :: restOfDamage ->
+                let remainingWounds = Wounds.removeWounds remainingWounds dmg
 
-    looper RemovedModels.zero damages woundsPerModel
+                if (Wounds.toInt remainingWounds) = 0 then
+                    looper (RemovedModels.removeModel removedModels) restOfDamage woundsPerModel
+                else
+                    looper removedModels restOfDamage remainingWounds
 
-let resolveCombat (defendingModels: DefendingModels) (attackingModels: AttackingModel list) =
-    let damages =
-        [| for i = 0 to numOfSimulations do
-               (Dice.runSequence defendingModels attackingModels) |]
-        |> List.ofArray
+        looper RemovedModels.zero damages woundsPerModel
 
-    let removedModels =
-        damages
-        |> List.map (fun damages -> removeModels defendingModels.Wounds damages)
+    let resolveCombat (defendingModels: DefendingModels) (attackingModels: AttackingModel list) =
+        let damages =
+            [| for i = 0 to numOfSimulations do
+                   (Dice.runSequence defendingModels attackingModels) |]
+            |> List.ofArray
+
+        let removedModels =
+            damages
+            |> List.map (fun damages -> removeModels defendingModels.Wounds damages)
 
 
-    let avgRemovedModels =
-        removedModels
-        |> List.map (fun rm -> rm |> RemovedModels.toInt)
-        |> List.map (fun rm -> rm |> double)
-        |> List.average
+        let avgRemovedModels =
+            removedModels
+            |> List.map (fun rm -> rm |> RemovedModels.toInt)
+            |> List.map (fun rm -> rm |> double)
+            |> List.average
 
-    damages, removedModels, avgRemovedModels
+        damages, removedModels, avgRemovedModels
