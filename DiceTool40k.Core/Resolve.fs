@@ -7,12 +7,18 @@ module Resolve =
 
     let numOfSimulations = 50000
 
-    let removeModels (woundsPerModel: Wounds) (damages: Damage list) =
+    let removeModels (feelNoPain: FeelNoPain option) (woundsPerModel: Wounds) (damages: Damage list) =
+
+        let applyFeelNoPain (damage: Damage) =
+            match feelNoPain with
+            | Some fnp -> FeelNoPain.apply fnp damage
+            | None -> damage
 
         let rec looper (removedModels: RemovedModels) (remainingDamages: Damage list) (remainingWounds: Wounds) =
             match remainingDamages with
             | [] -> removedModels
             | dmg :: restOfDamage ->
+                let dmg = applyFeelNoPain dmg
                 let remainingWounds = Wounds.removeWounds remainingWounds dmg
 
                 if (Wounds.toInt remainingWounds) = 0 then
@@ -30,7 +36,7 @@ module Resolve =
 
         let removedModels =
             damages
-            |> List.map (fun damages -> removeModels defendingModels.Wounds damages)
+            |> List.map (fun damages -> removeModels defendingModels.FeelNoPain defendingModels.Wounds damages)
 
 
         let avgRemovedModels =

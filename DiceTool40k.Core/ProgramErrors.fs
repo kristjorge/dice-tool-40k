@@ -20,6 +20,7 @@ module ProgramError =
         | NumConstantDamageMustBePositive of int
         | ConstantTermMustBePositive of int
         | InvalidDiceValue of int
+        | InvalidFeelNoPainValue of int
 
     let parseErrors (error: ProgramError) =
         match error with
@@ -41,3 +42,4 @@ module ProgramError =
         | UnableToParseDamageModifierType x -> $"Unable to parse damage modifier string ({x})"
         | InvalidDiceValue x -> $"Invalid DiceValue received ({x})"
         | UnableToParseReRollTypeDto x -> $"Unable to parse ReRoll type dto. Expected 'full' or 'ones', received '{x}'"
+        | InvalidFeelNoPainValue x -> $"FeelNoPain value must be between 2 and 6 ('{x}' received)"

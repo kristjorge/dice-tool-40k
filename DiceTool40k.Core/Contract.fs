@@ -42,4 +42,5 @@ module Contract =
           DamageModifier: string option
           ToHitModifier: int option
           ToWoundModifier: int option
+          FeelNoPain: int option
           NumModels: int }

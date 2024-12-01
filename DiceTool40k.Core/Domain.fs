@@ -15,6 +15,17 @@ module Domain =
 
     type DiceModifier = DiceModifier of int
 
+    type Dice =
+        | D6
+        | D3
+
+    module Dice =
+
+        let rollDice (diceType: Dice) () =
+            match diceType with
+            | D6 -> rnd.Next(1, 7) |> int |> DiceValue
+            | D3 -> rnd.Next(1, 4) |> int |> DiceValue
+
     module DiceValue =
 
         let six = DiceValue 6
@@ -42,6 +53,8 @@ module Domain =
 
     module DiceModifier =
 
+        let noModifier = DiceModifier 0
+
         let create (value: int) = DiceModifier value
 
         let toInt (DiceModifier modifierValue) = modifierValue
@@ -66,6 +79,9 @@ module Domain =
     type RequiredDiceRoll = RequiredDiceRoll of int
 
     module RequiredDiceRoll =
+
+        let create (DiceValue value) = RequiredDiceRoll value
+
         let compare (DiceValue roll) (RequiredDiceRoll required) = roll >= required
 
     type ReRoll =
@@ -83,6 +99,7 @@ module Domain =
     type Toughness = Toughness of int
     type InvulSave = InvulSave of int
     type Save = Save of int
+    type FeelNoPain = FeelNoPain of int
 
     module Save =
         let create (value: int) =
@@ -158,6 +175,17 @@ module Domain =
                 DiceModifier.modifyDiceRoll (Dice.rollDice d ()) modifier
                 |> DiceValue.toInt
                 |> Damage
+
+
+    module FeelNoPain =
+        let create (value: int) =
+            match DiceValue.create value with
+            | Ok dv -> FeelNoPain(DiceValue.toInt dv) |> Ok
+            | Error _ -> ProgramError.InvalidFeelNoPainValue value |> Error
+
+        let toInt (FeelNoPain feelNoPain) = feelNoPain
+
+        let toRequiredRoll (feelNoPain: FeelNoPain) = feelNoPain |> toInt |> RequiredDiceRoll
 
 
     [<RequireQualifiedAccess>]
@@ -280,6 +308,7 @@ module Domain =
           Wounds: Wounds
           DamageModifier: ModifyDamageValue option
           RollModifiers: RollModifiers
+          FeelNoPain: FeelNoPain option
           NumModels: NumModels }
 
     type WeaponSpecialRules =

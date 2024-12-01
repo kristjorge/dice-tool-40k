@@ -238,3 +238,20 @@ module Rolls =
                         | InflictedDamageType.MortalWounds -> 1)
 
                 Damage.fromInflictedDamage defendingModels.DamageModifier attackingModel.WeaponProfile.Damage numWounds)
+
+    module FeelNoPain =
+        let apply (feelNoPain: FeelNoPain) (damage: Damage) =
+            // Takes FeelNoPain and Damage and rolls the FeelNoPain roll. For each successfull roll (Some DiceValue)
+            // the total number of damage is subtracted by 1c
+            let numDamage = Damage.toInt damage
+
+
+            let tryApply =
+                (Dice.rollDice Dice.D6 ()
+                 |> Dice.successfulRoll None (FeelNoPain.toRequiredRoll feelNoPain) DiceModifier.noModifier)
+
+            List.init numDamage (fun _ -> tryApply)
+            |> List.choose id
+            |> List.length
+            |> fun mitiagedDamage -> numDamage - mitiagedDamage
+            |> Damage

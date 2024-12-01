@@ -213,6 +213,14 @@ module Config =
                         | Ok dmgMod -> Some dmgMod |> Ok
                         | Error error -> Error error
 
+                let! feelNoPain =
+                    match dto.FeelNoPain with
+                    | None -> None |> Ok
+                    | Some fnp ->
+                        match FeelNoPain.create fnp with
+                        | Ok fnp -> Some fnp |> Ok
+                        | Error error -> Error error
+
                 let hitModifier = DiceModifier.toDomainFromOption dto.ToHitModifier
                 let toWoundModifier = DiceModifier.toDomainFromOption dto.ToWoundModifier
 
@@ -225,5 +233,7 @@ module Config =
                       RollModifiers =
                         { ToHitModifier = hitModifier
                           ToWoundModifier = toWoundModifier }
-                      NumModels = numModels }
+                      NumModels = numModels
+                      FeelNoPain = feelNoPain }
+
             }
