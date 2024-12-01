@@ -133,7 +133,7 @@ module Rolls =
                 | Some (Ordinary _) -> [ ActionSet.Saving ] |> Some
                 | Some (Critial _) ->
                     if devestatingWounds then
-                        [ ActionSet.Damage InflictedDamageType.MortalWounds ]
+                        [ ActionSet.Damage InflictedDamageType.Normal ] // Dev wounds does not yield mortal wounds anymore
                         |> Some
                     else
                         [ ActionSet.Saving ] |> Some
