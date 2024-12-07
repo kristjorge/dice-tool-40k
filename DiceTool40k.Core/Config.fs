@@ -44,8 +44,8 @@ module Config =
     module DiceModifier =
         let toDomainFromOption (value: int option) =
             match value with
-            | None -> DiceModifier.create 0
-            | Some v -> DiceModifier.create v
+            | None -> DiceValueModifier.create 0
+            | Some v -> DiceValueModifier.create v
 
     module SustainedHitsDto =
 
@@ -66,7 +66,7 @@ module Config =
                     let! varSustained = DiceType.toDomain d
 
                     if constant <> 0 then
-                        return (SustainedHits.VariableModified(varSustained, DiceModifier constant))
+                        return (SustainedHits.VariableModified(varSustained, DiceValueModifier constant))
                     else
                         return (SustainedHits.Variable varSustained)
                 }
@@ -89,7 +89,7 @@ module Config =
                     let! varAttacks = DiceType.toDomain d
 
                     if constant <> 0 then
-                        return (Attacks.VariableModified(varAttacks, DiceModifier constant))
+                        return (Attacks.VariableModified(varAttacks, DiceValueModifier constant))
                     else
                         return (Attacks.Variable varAttacks)
                 }
@@ -112,7 +112,7 @@ module Config =
                     let! varDamage = DiceType.toDomain d
 
                     if constant <> 0 then
-                        return (DamageType.VariableModified(varDamage, DiceModifier constant))
+                        return (DamageType.VariableModified(varDamage, DiceValueModifier constant))
                     else
                         return (DamageType.Variable varDamage)
                 }

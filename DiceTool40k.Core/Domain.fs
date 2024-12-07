@@ -9,11 +9,10 @@ module Domain =
 
     type DiceValue = DiceValue of int
     type DiceValueModified = DiceValueModified of int
+    type DiceValueModifier = DiceValueModifier of int
 
     module DiceValueModified =
         let toInt (DiceValueModified modifiedValue) = modifiedValue
-
-    type DiceModifier = DiceModifier of int
 
     type Dice =
         | D6
@@ -38,51 +37,46 @@ module Domain =
 
         let toInt (DiceValue dice) = dice
 
-    type Dice =
-        | D6
-        | D3
+    module DiceValueModifier =
 
-    module Dice =
+        let noModifier = DiceValueModifier 0
 
-        let rollDice (diceType: Dice) () =
-            match diceType with
-            | D6 -> rnd.Next(1, 7) |> int |> DiceValue
-            | D3 -> rnd.Next(1, 4) |> int |> DiceValue
+        let zero = DiceValueModifier 0
 
+        let create (value: int) = DiceValueModifier value
 
+        let toInt (DiceValueModifier modifierValue) = modifierValue
 
-    module DiceModifier =
-
-        let noModifier = DiceModifier 0
-
-        let create (value: int) = DiceModifier value
-
-        let toInt (DiceModifier modifierValue) = modifierValue
-
-        let aggregate (modifiers: DiceModifier list) =
+        let aggregate (modifiers: DiceValueModifier list) =
             modifiers
             |> List.map toInt
-            |> List.reduce (fun x y -> x + y)
+            |> List.reduce (fun mod1 mod2 -> mod1 + mod2)
             |> fun modifier ->
                 if modifier < -1 then -1
                 elif modifier > 1 then 1
                 else modifier
-            |> DiceModifier
+            |> DiceValueModifier
 
-        let modifyDiceRoll (diceValue: DiceValue) (modifier: DiceModifier) =
+        let modifyDiceRoll (diceValue: DiceValue) (modifier: DiceValueModifier) =
             DiceValue.toInt diceValue
             |> fun d -> d + (toInt modifier)
             |> DiceValue
-
 
 
     type RequiredDiceRoll = RequiredDiceRoll of int
 
     module RequiredDiceRoll =
 
-        let create (DiceValue value) = RequiredDiceRoll value
+        let toInt (RequiredDiceRoll required) = required
 
-        let compare (DiceValue roll) (RequiredDiceRoll required) = roll >= required
+        let create (value: int) =
+            if value > 1 then
+                RequiredDiceRoll value |> Ok
+            else
+                Error(ProgramError.InvalidRequiredDiceRoll value)
+
+        let compare (roll: DiceValue) (required: RequiredDiceRoll) =
+            (DiceValue.toInt roll) >= (toInt required)
 
     type ReRoll =
         | Ones
@@ -94,35 +88,58 @@ module Domain =
 
     type Skill = Skill of int
     type Strength = Strength of int
-
-
     type Toughness = Toughness of int
-    type InvulSave = InvulSave of int
-    type Save = Save of int
-    type FeelNoPain = FeelNoPain of int
+    type InvulSave = InvulSave of RequiredDiceRoll
+    type Save = Save of RequiredDiceRoll
+    type FeelNoPain = FeelNoPain of RequiredDiceRoll
+
+    type ArmourPiercing = ArmourPiercing of int
+
+    module ArmourPiercing =
+
+        let toInt (ArmourPiercing ap) = ap
+
+        let create (value: int) =
+            if value >= 0 then
+                ArmourPiercing value |> Ok
+            else
+                (ProgramError.InvalidArmourPiercingValue value)
+                |> Error
 
     module Save =
+
+        let toInt (Save (RequiredDiceRoll save)) = save
+
         let create (value: int) =
-            if value > 1 then
-                Save value |> Ok
-            else
-                ProgramError.InvalidSaveValue value |> Error
+            match (RequiredDiceRoll.create value) with
+            | Ok req -> Save req |> Ok
+            | Error _ -> ProgramError.InvalidSaveValue value |> Error
+
+        let applyArmourPiercing (save: Save) (armourPiercing: ArmourPiercing) =
+            // ArmourPiercing is always positive, meaning a RequiredDiceRoll modified
+            // by a positive ArmoudPiercing is also itself always positive
+            // Does not need Result<RequiredDiceRoll, ProgramError> because of that
+            let modSave =
+                (toInt save)
+                + (ArmourPiercing.toInt armourPiercing)
+
+            Save(RequiredDiceRoll modSave)
 
 
     module InvulSave =
+
+        let toInt (InvulSave (RequiredDiceRoll invul)) = invul
+
         let create (value: int) =
-            if value > 1 then
-                InvulSave value |> Ok
-            else
-                ProgramError.InvalidInvulSaveValue value |> Error
-
-
+            match (RequiredDiceRoll.create value) with
+            | Ok req -> InvulSave req |> Ok
+            | Error _ -> ProgramError.InvalidInvulSaveValue value |> Error
 
 
     type Attacks =
         | Constant of int
         | Variable of Dice
-        | VariableModified of (Dice * DiceModifier)
+        | VariableModified of (Dice * DiceValueModifier)
 
     module Attacks =
         let resolve (attacks: Attacks) =
@@ -131,13 +148,13 @@ module Domain =
                 | Attacks.Constant n -> n
                 | Attacks.Variable d -> Dice.rollDice d () |> DiceValue.toInt
                 | Attacks.VariableModified (d, modifier) ->
-                    DiceModifier.modifyDiceRoll (Dice.rollDice d ()) modifier
+                    DiceValueModifier.modifyDiceRoll (Dice.rollDice d ()) modifier
                     |> DiceValue.toInt
 
     type SustainedHits =
         | Constant of int
         | Variable of Dice
-        | VariableModified of (Dice * DiceModifier)
+        | VariableModified of (Dice * DiceValueModifier)
 
     module SustainedHits =
         let resolve (sustainedHits: SustainedHits) =
@@ -145,24 +162,15 @@ module Domain =
             | Constant n -> DiceValue n |> DiceValue.toInt
             | Variable d -> Dice.rollDice d () |> DiceValue.toInt
             | VariableModified (d, modifier) ->
-                DiceModifier.modifyDiceRoll (Dice.rollDice d ()) modifier
+                DiceValueModifier.modifyDiceRoll (Dice.rollDice d ()) modifier
                 |> DiceValue.toInt
 
 
-    type ArmourPiercing = ArmourPiercing of int
-
-    module ArmourPiercing =
-        let create (value: int) =
-            if value >= 0 then
-                ArmourPiercing value |> Ok
-            else
-                (ProgramError.InvalidArmourPiercingValue value)
-                |> Error
 
     type DamageType =
         | Constant of int
         | Variable of Dice
-        | VariableModified of (Dice * DiceModifier)
+        | VariableModified of (Dice * DiceValueModifier)
 
     type Damage = Damage of int
 
@@ -172,20 +180,20 @@ module Domain =
             | DamageType.Constant n -> Damage n
             | DamageType.Variable dice -> Dice.rollDice dice () |> DiceValue.toInt |> Damage
             | DamageType.VariableModified (d, modifier) ->
-                DiceModifier.modifyDiceRoll (Dice.rollDice d ()) modifier
+                DiceValueModifier.modifyDiceRoll (Dice.rollDice d ()) modifier
                 |> DiceValue.toInt
                 |> Damage
 
 
     module FeelNoPain =
         let create (value: int) =
-            match DiceValue.create value with
-            | Ok dv -> FeelNoPain(DiceValue.toInt dv) |> Ok
+            match RequiredDiceRoll.create value with
+            | Ok req -> FeelNoPain req |> Ok
             | Error _ -> ProgramError.InvalidFeelNoPainValue value |> Error
 
         let toInt (FeelNoPain feelNoPain) = feelNoPain
 
-        let toRequiredRoll (feelNoPain: FeelNoPain) = feelNoPain |> toInt |> RequiredDiceRoll
+        let toRequiredRoll (FeelNoPain feelNoPain) = feelNoPain
 
 
     [<RequireQualifiedAccess>]
@@ -298,8 +306,8 @@ module Domain =
             |> RemovedModels
 
     type RollModifiers =
-        { ToHitModifier: DiceModifier
-          ToWoundModifier: DiceModifier }
+        { ToHitModifier: DiceValueModifier
+          ToWoundModifier: DiceValueModifier }
 
     type DefendingModels =
         { Toughness: Toughness

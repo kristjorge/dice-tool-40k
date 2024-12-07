@@ -21,6 +21,7 @@ module ProgramError =
         | ConstantTermMustBePositive of int
         | InvalidDiceValue of int
         | InvalidFeelNoPainValue of int
+        | InvalidRequiredDiceRoll of int
 
     let parseErrors (error: ProgramError) =
         match error with
@@ -43,3 +44,4 @@ module ProgramError =
         | InvalidDiceValue x -> $"Invalid DiceValue received ({x})"
         | UnableToParseReRollTypeDto x -> $"Unable to parse ReRoll type dto. Expected 'full' or 'ones', received '{x}'"
         | InvalidFeelNoPainValue x -> $"FeelNoPain value must be between 2 and 6 ('{x}' received)"
+        | InvalidRequiredDiceRoll x -> $"RequiredDiceRoll must be between 2 and 6 ('{x} received)"

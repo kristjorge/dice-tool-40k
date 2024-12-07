@@ -21,16 +21,16 @@ module Rolls =
             else
                 RequiredDiceRoll 4
 
-        let toSave (Save save) (invul: InvulSave option) (ArmourPiercing ap) =
-            let modSave = save + ap
+        let toSave (save: Save) (invul: InvulSave option) (ap: ArmourPiercing) =
+            let modSave = Save.applyArmourPiercing save ap
 
             match invul with
-            | Some (InvulSave invulValue) ->
-                if modSave >= invulValue then
-                    RequiredDiceRoll invulValue
+            | Some (InvulSave (RequiredDiceRoll i)) ->
+                if (Save.toInt modSave) >= i then
+                    RequiredDiceRoll i
                 else
-                    RequiredDiceRoll modSave
-            | None -> RequiredDiceRoll modSave
+                    RequiredDiceRoll(Save.toInt modSave)
+            | None -> RequiredDiceRoll(Save.toInt modSave)
 
 
     type CriticalRollCheck = DiceValue -> bool
@@ -63,10 +63,10 @@ module Rolls =
         let rec successfulRoll
             (fReRollCheck: RerollCheck option)
             (required: RequiredDiceRoll)
-            (modifier: DiceModifier)
+            (modifier: DiceValueModifier)
             (rolledDiceValue: DiceValue)
             =
-            let modifiedRoll = DiceModifier.modifyDiceRoll rolledDiceValue modifier
+            let modifiedRoll = DiceValueModifier.modifyDiceRoll rolledDiceValue modifier
             let isSuccessful = RequiredDiceRoll.compare modifiedRoll required
 
             match isSuccessful, fReRollCheck with
@@ -86,7 +86,7 @@ module Rolls =
         let rollToHit
             (fCrit: CriticalRollCheck)
             (fReRoll: RerollCheck option)
-            (rollModifier: DiceModifier)
+            (rollModifier: DiceValueModifier)
             (lethalHit: bool)
             (sustainedHits: SustainedHits option)
             (skill: Skill)
@@ -118,7 +118,7 @@ module Rolls =
         let rollToWound
             (fCrit: CriticalRollCheck)
             (fReRoll: RerollCheck option)
-            (woundModifier: DiceModifier)
+            (woundModifier: DiceValueModifier)
             (devestatingWounds: bool)
             (toughness: Toughness)
             (strength: Strength)
@@ -140,8 +140,10 @@ module Rolls =
 
 
         let rollToSave (save: Save) (invul: InvulSave option) (ap: ArmourPiercing) (diceRoller: unit -> DiceValue) =
+            let requiredSaveRoll = RequiredDiceRoll.toSave save invul ap
+
             diceRoller ()
-            |> successfulRoll None (RequiredDiceRoll.toSave save invul ap) (DiceModifier 0) // Can not modify save value
+            |> successfulRoll None requiredSaveRoll DiceValueModifier.zero // Can not modify save value
             |> function
                 | None ->
                     [ ActionSet.Damage InflictedDamageType.Normal ]
@@ -189,12 +191,12 @@ module Rolls =
                 let fCritWound = createCritFunction attackingModel.CritWound
 
                 let aggregatedHitModifier =
-                    DiceModifier.aggregate [ defendingModels.RollModifiers.ToHitModifier
-                                             attackingModel.RollModifiers.ToHitModifier ]
+                    DiceValueModifier.aggregate [ defendingModels.RollModifiers.ToHitModifier
+                                                  attackingModel.RollModifiers.ToHitModifier ]
 
                 let aggregatedWoundModifier =
-                    DiceModifier.aggregate [ defendingModels.RollModifiers.ToWoundModifier
-                                             attackingModel.RollModifiers.ToWoundModifier ]
+                    DiceValueModifier.aggregate [ defendingModels.RollModifiers.ToWoundModifier
+                                                  attackingModel.RollModifiers.ToWoundModifier ]
 
 
                 let hitRoller =
@@ -248,7 +250,7 @@ module Rolls =
 
             let tryApply =
                 (Dice.rollDice Dice.D6 ()
-                 |> Dice.successfulRoll None (FeelNoPain.toRequiredRoll feelNoPain) DiceModifier.noModifier)
+                 |> Dice.successfulRoll None (FeelNoPain.toRequiredRoll feelNoPain) DiceValueModifier.noModifier)
 
             List.init numDamage (fun _ -> tryApply)
             |> List.choose id
