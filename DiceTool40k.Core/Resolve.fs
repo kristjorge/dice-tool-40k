@@ -5,7 +5,7 @@ open DiceTool40K.Core.Rolls
 
 module Resolve =
 
-    let numOfSimulations = 50000
+    let numOfSimulations = 100000
 
     let removeModels (feelNoPain: FeelNoPain option) (woundsPerModel: Wounds) (damages: Damage list) =
 
