@@ -11,9 +11,6 @@ module Domain =
     type DiceValueModified = DiceValueModified of int
     type DiceValueModifier = DiceValueModifier of int
 
-    module DiceValueModified =
-        let toInt (DiceValueModified modifiedValue) = modifiedValue
-
     type Dice =
         | D6
         | D3
@@ -128,8 +125,6 @@ module Domain =
 
     module InvulSave =
 
-        let toInt (InvulSave (RequiredDiceRoll invul)) = invul
-
         let create (value: int) =
             match (RequiredDiceRoll.create value) with
             | Ok req -> InvulSave req |> Ok
@@ -158,8 +153,6 @@ module Domain =
             match RequiredDiceRoll.create value with
             | Ok req -> FeelNoPain req |> Ok
             | Error _ -> ProgramError.InvalidFeelNoPainValue value |> Error
-
-        let toInt (FeelNoPain feelNoPain) = feelNoPain
 
         let toRequiredRoll (FeelNoPain feelNoPain) = feelNoPain
 
