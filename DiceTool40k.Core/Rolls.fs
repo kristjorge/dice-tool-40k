@@ -2,8 +2,36 @@ namespace DiceTool40K.Core
 
 open DiceTool40K.Core.Domain
 
-module Rolls =
+module Attacks =
+    let resolve (attacks: Attacks) =
+        attacks
+        |> function
+            | Attacks.Constant n -> n
+            | Attacks.Variable d -> Dice.rollDice d () |> DiceValue.toInt
+            | Attacks.VariableModified (d, modifier) ->
+                DiceValueModifier.modifyDiceRoll (Dice.rollDice d ()) modifier
+                |> DiceValue.toInt
 
+module SustainedHits =
+    let resolve (sustainedHits: SustainedHits) =
+        match sustainedHits with
+        | SustainedHits.Constant n -> DiceValue n |> DiceValue.toInt
+        | SustainedHits.Variable d -> Dice.rollDice d () |> DiceValue.toInt
+        | SustainedHits.VariableModified (d, modifier) ->
+            DiceValueModifier.modifyDiceRoll (Dice.rollDice d ()) modifier
+            |> DiceValue.toInt
+
+module DamageType =
+    let resolve (dmgType: DamageType) =
+        match dmgType with
+        | DamageType.Constant n -> Damage n
+        | DamageType.Variable dice -> Dice.rollDice dice () |> DiceValue.toInt |> Damage
+        | DamageType.VariableModified (d, modifier) ->
+            DiceValueModifier.modifyDiceRoll (Dice.rollDice d ()) modifier
+            |> DiceValue.toInt
+            |> Damage
+
+module Rolls =
     module RequiredDiceRoll =
         let toHit (Skill skill) = RequiredDiceRoll skill
 
@@ -34,9 +62,7 @@ module Rolls =
 
 
     type CriticalRollCheck = DiceValue -> bool
-
     type RerollCheck = RequiredDiceRoll -> DiceValue -> bool
-
 
     module Dice =
 
@@ -169,84 +195,13 @@ module Rolls =
                     | ActionSet.Saving -> determineNumberOfWounds hitRoller woundRoller saveRoller saveRoller
                     | ActionSet.Damage damageType -> [ (Some damageType) ])
 
-        let runSequence (defendingModels: DefendingModels) (attackingModels: AttackingModel list) =
 
-            let createReRollFunction (reRoll: ReRoll option) =
-                match reRoll with
-                | None -> None
-                | Some rr -> fReRoll rr |> Some
-
-            let createCritFunction (critValue: DiceValue option) =
-                match critValue with
-                | None -> CriticalRoll.fCriticalRoll (DiceValue.six)
-                | Some value -> CriticalRoll.fCriticalRoll value
-
-
-            attackingModels
-            |> List.collect (fun attackingModel ->
-
-                let fReRollWound = createReRollFunction attackingModel.ReRollWound
-                let fReRollHit = createReRollFunction attackingModel.ReRollHit
-                let fCritHit = createCritFunction attackingModel.CritHit
-                let fCritWound = createCritFunction attackingModel.CritWound
-
-                let aggregatedHitModifier =
-                    DiceValueModifier.aggregate [ defendingModels.RollModifiers.ToHitModifier
-                                                  attackingModel.RollModifiers.ToHitModifier ]
-
-                let aggregatedWoundModifier =
-                    DiceValueModifier.aggregate [ defendingModels.RollModifiers.ToWoundModifier
-                                                  attackingModel.RollModifiers.ToWoundModifier ]
-
-
-                let hitRoller =
-                    rollToHit
-                        fCritHit
-                        fReRollHit
-                        aggregatedHitModifier
-                        attackingModel.SpecialRules.LethalHits
-                        attackingModel.SpecialRules.SustainedHits
-                        attackingModel.WeaponProfile.Skill
-
-                let woundRoller =
-                    rollToWound
-                        fCritWound
-                        fReRollWound
-                        aggregatedWoundModifier
-                        attackingModel.SpecialRules.DevestatingWounds
-                        defendingModels.Toughness
-                        attackingModel.WeaponProfile.Strength
-
-                let saveRoller =
-                    rollToSave defendingModels.Save defendingModels.Invul attackingModel.WeaponProfile.ArmourPiercing
-
-                let numAttacks = Attacks.resolve attackingModel.WeaponProfile.Attacks
-
-                let numAttacks =
-                    match attackingModel.SpecialRules.Blast with
-                    | false -> numAttacks
-                    | true -> WeaponSpecialRules.Blast.applyBlast numAttacks defendingModels.NumModels
-
-                let numWounds =
-                    [| for i = 0 to (numAttacks - 1) do
-                           (determineNumberOfWounds hitRoller woundRoller saveRoller hitRoller) |]
-                    |> List.ofArray
-                    |> List.collect id
-                    |> List.choose id
-                    |> List.sortBy (fun d ->
-                        // Sort the wounds such that normal wounds are allocated first and then the mortals afterwards
-                        match d with
-                        | InflictedDamageType.Normal -> 0
-                        | InflictedDamageType.MortalWounds -> 1)
-
-                Damage.fromInflictedDamage defendingModels.DamageModifier attackingModel.WeaponProfile.Damage numWounds)
 
     module FeelNoPain =
         let apply (feelNoPain: FeelNoPain) (damage: Damage) =
-            // Takes FeelNoPain and Damage and rolls the FeelNoPain roll. For each successfull roll (Some DiceValue)
+            // Takes FeeplNoPain and Damage and rolls the FeelNoPain roll. For each successfull roll (Some DiceValue)
             // the total number of damage is subtracted by 1c
             let numDamage = Damage.toInt damage
-
 
             let tryApply =
                 (Dice.rollDice Dice.D6 ()
