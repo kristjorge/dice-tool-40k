@@ -195,8 +195,6 @@ module Rolls =
                     | ActionSet.Saving -> determineNumberOfWounds hitRoller woundRoller saveRoller saveRoller
                     | ActionSet.Damage damageType -> [ (Some damageType) ])
 
-
-
     module FeelNoPain =
         let apply (feelNoPain: FeelNoPain) (damage: Damage) =
             // Takes FeeplNoPain and Damage and rolls the FeelNoPain roll. For each successfull roll (Some DiceValue)

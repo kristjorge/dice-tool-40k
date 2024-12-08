@@ -84,7 +84,6 @@ module Config =
                     Error(ProgramError.NumConstantSustainedHitsMustBePositive constant)
 
             | Some d ->
-
                 result {
                     let! varAttacks = DiceType.toDomain d
 
@@ -107,7 +106,6 @@ module Config =
                     Error(ProgramError.NumConstantSustainedHitsMustBePositive constant)
 
             | Some d ->
-
                 result {
                     let! varDamage = DiceType.toDomain d
 
@@ -157,16 +155,12 @@ module Config =
                         | Error e -> Error e
                         | Ok diceValue -> Ok(Some diceValue)
 
-
-
-
                 let toHitModifier = DiceModifier.toDomainFromOption dto.ToHitModifier
                 let toWoundModifier = DiceModifier.toDomainFromOption dto.ToWoundModifier
                 let! toCritHit = makeDiceValueFromOption dto.CritHitDiceValue
                 let! toCritWound = makeDiceValueFromOption dto.CritWoundDiceValue
                 let! reRollHit = makeReRollFromOption dto.ReRollHit
                 let! reRollWound = makeReRollFromOption dto.ReRollWounds
-
 
                 let weaponProfile =
                     { WeaponProfile.Attacks = numAttacks
@@ -200,7 +194,6 @@ module Config =
                         match InvulSave.create invul with
                         | Ok inv -> Some inv |> Ok
                         | Error e -> Error e
-
 
                 let! wounds = Wounds.create dto.Wounds
                 let! numModels = NumModels.create dto.NumModels

@@ -156,7 +156,6 @@ module Domain =
 
         let toRequiredRoll (FeelNoPain feelNoPain) = feelNoPain
 
-
     [<RequireQualifiedAccess>]
     type InflictedDamageType =
         | Normal
@@ -235,6 +234,7 @@ module Domain =
     module RemovedModels =
 
         let zero = 0 |> RemovedModels
+
         let toInt (RemovedModels num) = num
 
         let removeModel (removedModels: RemovedModels) =
@@ -268,7 +268,6 @@ module Domain =
             let applyBlast (baseAttacks: int) (numModels: NumModels) =
                 baseAttacks + (NumModels.toInt numModels) / 5
 
-
     type WeaponProfile =
         { Skill: Skill
           Attacks: Attacks
@@ -284,7 +283,6 @@ module Domain =
           ReRollWound: ReRoll option
           CritHit: DiceValue option
           CritWound: DiceValue option }
-
 
     [<RequireQualifiedAccess>]
     type ActionSet =
