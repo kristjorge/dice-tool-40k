@@ -54,24 +54,13 @@ module Resolve =
 
     let runSequence (defendingModels: DefendingModels) (attackingModels: AttackingModel list) =
 
-        let createReRollFunction (reRoll: ReRoll option) =
-            match reRoll with
-            | None -> None
-            | Some rr -> Dice.fReRoll rr |> Some
-
-        let createCritFunction (critValue: DiceValue option) =
-            match critValue with
-            | None -> Dice.CriticalRoll.fCriticalRoll (DiceValue.six)
-            | Some value -> Dice.CriticalRoll.fCriticalRoll value
-
-
         attackingModels
         |> List.collect (fun attackingModel ->
 
-            let fReRollWound = createReRollFunction attackingModel.ReRollWound
-            let fReRollHit = createReRollFunction attackingModel.ReRollHit
-            let fCritHit = createCritFunction attackingModel.CritHit
-            let fCritWound = createCritFunction attackingModel.CritWound
+            let fReRollWound = ReRoll.createReRollFunction attackingModel.ReRollWound
+            let fReRollHit = ReRoll.createReRollFunction attackingModel.ReRollHit
+            let fCritHit = CriticalRoll.createCritFunction attackingModel.CritHit
+            let fCritWound = CriticalRoll.createCritFunction attackingModel.CritWound
 
             let aggregatedHitModifier =
                 DiceValueModifier.aggregate [ defendingModels.RollModifiers.ToHitModifier
@@ -82,7 +71,7 @@ module Resolve =
                                               attackingModel.RollModifiers.ToWoundModifier ]
 
             let hitRoller =
-                Dice.rollToHit
+                rollToHit
                     fCritHit
                     fReRollHit
                     aggregatedHitModifier
@@ -91,7 +80,7 @@ module Resolve =
                     attackingModel.WeaponProfile.Skill
 
             let woundRoller =
-                Dice.rollToWound
+                rollToWound
                     fCritWound
                     fReRollWound
                     aggregatedWoundModifier
@@ -100,7 +89,7 @@ module Resolve =
                     attackingModel.WeaponProfile.Strength
 
             let saveRoller =
-                Dice.rollToSave defendingModels.Save defendingModels.Invul attackingModel.WeaponProfile.ArmourPiercing
+                rollToSave defendingModels.Save defendingModels.Invul attackingModel.WeaponProfile.ArmourPiercing
 
             let numAttacks = Attacks.resolve attackingModel.WeaponProfile.Attacks
 
@@ -111,7 +100,7 @@ module Resolve =
 
             let numWounds =
                 [| for i = 0 to (numAttacks - 1) do
-                       (Dice.determineNumberOfWounds hitRoller woundRoller saveRoller hitRoller) |]
+                       (Sequence.determineNumberOfWounds hitRoller woundRoller saveRoller hitRoller) |]
                 |> List.ofArray
                 |> List.collect id
                 |> List.choose id
