@@ -11,9 +11,6 @@ module Domain =
     type DiceValueModified = DiceValueModified of int
     type DiceValueModifier = DiceValueModifier of int
 
-    module DiceValueModified =
-        let toInt (DiceValueModified modifiedValue) = modifiedValue
-
     type Dice =
         | D6
         | D3
@@ -128,8 +125,6 @@ module Domain =
 
     module InvulSave =
 
-        let toInt (InvulSave (RequiredDiceRoll invul)) = invul
-
         let create (value: int) =
             match (RequiredDiceRoll.create value) with
             | Ok req -> InvulSave req |> Ok
@@ -141,31 +136,10 @@ module Domain =
         | Variable of Dice
         | VariableModified of (Dice * DiceValueModifier)
 
-    module Attacks =
-        let resolve (attacks: Attacks) =
-            attacks
-            |> function
-                | Attacks.Constant n -> n
-                | Attacks.Variable d -> Dice.rollDice d () |> DiceValue.toInt
-                | Attacks.VariableModified (d, modifier) ->
-                    DiceValueModifier.modifyDiceRoll (Dice.rollDice d ()) modifier
-                    |> DiceValue.toInt
-
     type SustainedHits =
         | Constant of int
         | Variable of Dice
         | VariableModified of (Dice * DiceValueModifier)
-
-    module SustainedHits =
-        let resolve (sustainedHits: SustainedHits) =
-            match sustainedHits with
-            | Constant n -> DiceValue n |> DiceValue.toInt
-            | Variable d -> Dice.rollDice d () |> DiceValue.toInt
-            | VariableModified (d, modifier) ->
-                DiceValueModifier.modifyDiceRoll (Dice.rollDice d ()) modifier
-                |> DiceValue.toInt
-
-
 
     type DamageType =
         | Constant of int
@@ -174,27 +148,13 @@ module Domain =
 
     type Damage = Damage of int
 
-    module DamageType =
-        let resolve (dmgType: DamageType) =
-            match dmgType with
-            | DamageType.Constant n -> Damage n
-            | DamageType.Variable dice -> Dice.rollDice dice () |> DiceValue.toInt |> Damage
-            | DamageType.VariableModified (d, modifier) ->
-                DiceValueModifier.modifyDiceRoll (Dice.rollDice d ()) modifier
-                |> DiceValue.toInt
-                |> Damage
-
-
     module FeelNoPain =
         let create (value: int) =
             match RequiredDiceRoll.create value with
             | Ok req -> FeelNoPain req |> Ok
             | Error _ -> ProgramError.InvalidFeelNoPainValue value |> Error
 
-        let toInt (FeelNoPain feelNoPain) = feelNoPain
-
         let toRequiredRoll (FeelNoPain feelNoPain) = feelNoPain
-
 
     [<RequireQualifiedAccess>]
     type InflictedDamageType =
@@ -213,29 +173,6 @@ module Domain =
         let minusOne (Damage damage) = (damage - 1) |> max 1 |> Damage
 
         let toInt (Damage dmg) = dmg
-
-        let fromInflictedDamage
-            (fModDamage: ModifyDamageValue option)
-            (baseDamage: DamageType)
-            (damages: InflictedDamageType list)
-            =
-            let resolveDamage () =
-                match fModDamage with
-                | Some f -> DamageType.resolve baseDamage |> f
-                | None -> DamageType.resolve baseDamage
-
-            let damageTypeToDamage (damageType: InflictedDamageType) =
-                match damageType with
-                | InflictedDamageType.Normal -> [ resolveDamage () ]
-                | InflictedDamageType.MortalWounds -> List.replicate (toInt (resolveDamage ())) (Damage 1)
-
-
-            let rec looper (acc: Damage list) (remainder: InflictedDamageType list) =
-                match remainder with
-                | [] -> acc |> List.rev
-                | dmgType :: rest -> looper ((damageTypeToDamage dmgType) @ acc) rest
-
-            looper [] damages
 
     type Wounds = Wounds of int
 
@@ -297,6 +234,7 @@ module Domain =
     module RemovedModels =
 
         let zero = 0 |> RemovedModels
+
         let toInt (RemovedModels num) = num
 
         let removeModel (removedModels: RemovedModels) =
@@ -330,7 +268,6 @@ module Domain =
             let applyBlast (baseAttacks: int) (numModels: NumModels) =
                 baseAttacks + (NumModels.toInt numModels) / 5
 
-
     type WeaponProfile =
         { Skill: Skill
           Attacks: Attacks
@@ -346,7 +283,6 @@ module Domain =
           ReRollWound: ReRoll option
           CritHit: DiceValue option
           CritWound: DiceValue option }
-
 
     [<RequireQualifiedAccess>]
     type ActionSet =
