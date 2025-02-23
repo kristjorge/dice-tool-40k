@@ -29,6 +29,10 @@ module Damage =
 
 module Resolve =
 
+    type CombatResolution =
+        { Damages: Damage list
+          RemovedModels: RemovedModels }
+
     let numOfSimulations = 100000
 
     let removeModels (feelNoPain: FeelNoPain option) (woundsPerModel: Wounds) (damages: Damage list) =
