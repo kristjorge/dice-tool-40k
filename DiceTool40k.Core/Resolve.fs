@@ -126,10 +126,6 @@ module Resolve =
             damages
             |> List.map (fun damages -> removeModels defendingModels.FeelNoPain defendingModels.Wounds damages)
 
-        let avgRemovedModels =
-            removedModels
-            |> List.map (fun rm -> rm |> RemovedModels.toInt)
-            |> List.map (fun rm -> rm |> double)
-            |> List.average
-
-        damages, removedModels, avgRemovedModels
+        // Return list of CombatResolutions
+        List.zip damages removedModels
+        |> List.map (fun (d, r) -> { Damages = d; RemovedModels = r })
