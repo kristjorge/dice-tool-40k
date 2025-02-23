@@ -8,10 +8,10 @@
   <ItemGroup>
     <Compile Include="ProgramErrors.fs" />
     <Compile Include="Domain.fs" />
-    <Compile Include="Contract.fs" />
-    <Compile Include="Config.fs" />
     <Compile Include="Rolls.fs" />
     <Compile Include="Resolve.fs" />
+    <Compile Include="Contract.fs" />
+    <Compile Include="Config.fs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FsToolkit.ErrorHandling" Version="4.18.0" />

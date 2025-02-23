@@ -1,5 +1,7 @@
 namespace DiceTool40K.Core
 
+open DiceTool40K.Core.Resolve
+open DiceTool40K.Core.Domain
 
 module Contract =
     type SustainedHitsDto =
@@ -44,3 +46,16 @@ module Contract =
           ToWoundModifier: int option
           FeelNoPain: int option
           NumModels: int }
+
+    type ResolveCombatDto =
+        { AttackingModels: AttackingModelDto list
+          DefendingModels: DefendingModelsDto }
+
+    type CombatResolutionDto =
+        { Damages: int list
+          RemovedModels: int }
+
+    module CombatResolutionDto =
+        let fromDomain (resolution: Resolve.CombatResolution) =
+            { CombatResolutionDto.Damages = resolution.Damages |> List.map Damage.toInt
+              RemovedModels = resolution.RemovedModels |> RemovedModels.toInt }
